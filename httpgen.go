@@ -21,6 +21,7 @@ type RouteGroup interface {
 	Delete(path string, handler HandlerFunc)
 	Group(path string) RouteGroup
 	Use(middleware ...HandlerFunc)
+	Add(method []string, path string, handler HandlerFunc)
 }
 
 // HTTPServer 定义 HTTP 服务器接口

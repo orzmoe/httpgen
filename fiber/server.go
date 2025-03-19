@@ -90,6 +90,10 @@ func (g *RouterGroup) Use(middleware ...httpgen.HandlerFunc) {
 	}
 }
 
+func (g *RouterGroup) Add(method []string, path string, handler httpgen.HandlerFunc) {
+	g.group.Add(method, path, wrapHandler(handler))
+}
+
 func (s *Server) Start() error {
 	return s.app.Listen(s.config.GetAddr())
 }
