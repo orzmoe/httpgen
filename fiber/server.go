@@ -60,10 +60,31 @@ func (r *Server) Add(method []string, path string, handler httpgen.HandlerFunc) 
 	r.app.Add(method, path, wrapHandler(handler))
 }
 
-func (r *Server) Use(middleware ...httpgen.HandlerFunc) {
+func (r *Server) Use(middleware ...any) {
 	for _, m := range middleware {
-		r.app.Use(wrapHandler(m))
+		switch middleware := m.(type) {
+		case httpgen.NativeMiddleware:
+			r.app.Use(middleware.Native())
+		case httpgen.HandlerFunc:
+			r.app.Use(wrapHandler(middleware))
+		}
 	}
+}
+
+func (r *Server) NativeEngine() any {
+	return r.app
+}
+
+// 原生中间件适配器
+type FiberMiddleware struct {
+	handler fiber.Handler
+}
+
+func WrapNativeMiddleware(handler fiber.Handler) httpgen.NativeMiddleware {
+	return &FiberMiddleware{handler: handler}
+}
+func (m *FiberMiddleware) Native() interface{} {
+	return m.handler
 }
 
 type RouterGroup struct {
@@ -90,10 +111,23 @@ func (g *RouterGroup) Group(path string) httpgen.RouteGroup {
 	return &RouterGroup{group: g.group.Group(path)}
 }
 
-func (g *RouterGroup) Use(middleware ...httpgen.HandlerFunc) {
-	for _, m := range middleware {
-		g.group.Use(wrapHandler(m))
+func (g *RouterGroup) Use(middlewares ...any) {
+	for _, m := range middlewares {
+		switch middleware := m.(type) {
+		case httpgen.Middleware:
+			// 使用抽象中间件
+			g.group.Use(wrapMiddleware(middleware))
+		case httpgen.NativeMiddleware:
+			// 使用原生中间件
+			if handler, ok := middleware.Native().(fiber.Handler); ok {
+				g.group.Use(handler)
+			}
+		case fiber.Handler:
+			// 直接使用 Fiber 中间件
+			g.group.Use(middleware)
+		}
 	}
+
 }
 
 func (g *RouterGroup) Add(method []string, path string, handler httpgen.HandlerFunc) {
@@ -113,6 +147,26 @@ func wrapHandler(h httpgen.HandlerFunc) fiber.Handler {
 		ctx := &Context{ctx: c}
 		h(ctx)
 		return nil
+	}
+}
+
+func wrapMiddleware(m httpgen.Middleware) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		// 创建上下文适配器
+		ctx := &Context{ctx: c}
+
+		// 包装 next 处理函数
+		var err error
+		next := func(ctx httpgen.Context) error {
+			err = c.Next()
+			return err
+		}
+
+		// 执行中间件
+		wrapped := m.Wrap(next)
+		wrapped(ctx)
+
+		return err
 	}
 }
 

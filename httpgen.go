@@ -12,7 +12,7 @@ type RouteRegister interface {
 	Put(path string, handler HandlerFunc)
 	Delete(path string, handler HandlerFunc)
 	Group(path string) RouteGroup
-	Use(middleware ...HandlerFunc)
+	Use(middleware ...any)
 	Add(method []string, path string, handler HandlerFunc)
 }
 type RouteGroup interface {
@@ -21,7 +21,7 @@ type RouteGroup interface {
 	Put(path string, handler HandlerFunc)
 	Delete(path string, handler HandlerFunc)
 	Group(path string) RouteGroup
-	Use(middleware ...HandlerFunc)
+	Use(middleware ...any)
 	Add(method []string, path string, handler HandlerFunc)
 }
 
@@ -30,6 +30,17 @@ type HTTPServer interface {
 	Start() error
 	Shutdown() error
 	RouteRegister() RouteRegister
+	NativeEngine() any
+}
+
+// 中间件接口
+type Middleware interface {
+	Wrap(HandlerFunc) HandlerFunc
+}
+
+// 原生中间件
+type NativeMiddleware interface {
+	Native() any
 }
 
 // HandlerFunc 通用处理函数类型
