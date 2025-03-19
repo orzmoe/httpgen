@@ -60,6 +60,12 @@ func (r *Server) Add(method []string, path string, handler httpgen.HandlerFunc) 
 	r.app.Add(method, path, wrapHandler(handler))
 }
 
+func (r *Server) Use(middleware ...httpgen.HandlerFunc) {
+	for _, m := range middleware {
+		r.app.Use(wrapHandler(m))
+	}
+}
+
 type RouterGroup struct {
 	group fiber.Router
 }

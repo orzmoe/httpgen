@@ -12,6 +12,7 @@ type RouteRegister interface {
 	Put(path string, handler HandlerFunc)
 	Delete(path string, handler HandlerFunc)
 	Group(path string) RouteGroup
+	Use(middleware ...HandlerFunc)
 	Add(method []string, path string, handler HandlerFunc)
 }
 type RouteGroup interface {
