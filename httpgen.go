@@ -1,6 +1,7 @@
 package httpgen
 
 import (
+	"context"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type RouteRegister interface {
 	Put(path string, handler HandlerFunc)
 	Delete(path string, handler HandlerFunc)
 	Group(path string) RouteGroup
+	Add(method []string, path string, handler HandlerFunc)
 }
 type RouteGroup interface {
 	Get(path string, handler HandlerFunc)
@@ -38,6 +40,9 @@ type Context interface {
 	Query(key string) string
 	Body() []byte
 	BindJSON(v any) error
+	BindQuery(v any) error
+	BindURI(v any) error
+	BindBody(v any) error
 	JSON(code int, v any) error
 	String(code int, s string) error
 	Status(code int) Context
@@ -47,6 +52,8 @@ type Context interface {
 	Path() string
 	Method() string
 	Get(key string) string
+	GetReqHeaders() map[string][]string
+	Context() context.Context
 }
 
 type HttpConfig interface {

@@ -1,6 +1,8 @@
 package fiber
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/orzmoe/httpgen"
 	"go.uber.org/fx"
@@ -52,6 +54,10 @@ func (r *Server) Delete(path string, handler httpgen.HandlerFunc) {
 
 func (r *Server) Group(path string) httpgen.RouteGroup {
 	return &RouterGroup{group: r.app.Group(path)}
+}
+
+func (r *Server) Add(method []string, path string, handler httpgen.HandlerFunc) {
+	r.app.Add(method, path, wrapHandler(handler))
 }
 
 type RouterGroup struct {
@@ -116,6 +122,17 @@ func (c *Context) Query(key string) string {
 func (c *Context) BindJSON(v any) error {
 	return c.ctx.Bind().JSON(v)
 }
+func (c *Context) BindQuery(v any) error {
+	return c.ctx.Bind().Query(v)
+}
+
+func (c *Context) BindURI(v any) error {
+	return c.ctx.Bind().URI(v)
+}
+
+func (c *Context) BindBody(v any) error {
+	return c.ctx.Bind().Body(v)
+}
 
 func (c *Context) JSON(code int, v any) error {
 	return c.ctx.Status(code).JSON(v)
@@ -156,6 +173,14 @@ func (c *Context) Method() string {
 
 func (c *Context) Get(key string) string {
 	return c.ctx.Get(key)
+}
+
+func (c *Context) GetReqHeaders() map[string][]string {
+	return c.ctx.GetReqHeaders()
+}
+
+func (c *Context) Context() context.Context {
+	return c.ctx.Context()
 }
 
 var Module = fx.Module("fiber",
