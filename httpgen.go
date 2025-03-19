@@ -56,6 +56,7 @@ type Context interface {
 	Get(key string) string
 	GetReqHeaders() map[string][]string
 	Context() context.Context
+	Set(key, value string)
 }
 
 type HttpConfig interface {

@@ -193,6 +193,10 @@ func (c *Context) Context() context.Context {
 	return c.ctx.Context()
 }
 
+func (c *Context) Set(key, value string) {
+	c.ctx.Set(key, value)
+}
+
 var Module = fx.Module("fiber",
 	fx.Provide(
 		NewServer,
